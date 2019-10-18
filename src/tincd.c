@@ -156,6 +156,7 @@ static void usage(bool status) {
 	}
 }
 
+// 解析命令行参数
 static bool parse_options(int argc, char **argv) {
 	config_t *cfg;
 	int r;
@@ -645,13 +646,16 @@ static bool drop_privs() {
 # define setpriority(level) (setpriority(PRIO_PROCESS, 0, (level)))
 #endif
 
+// 函数的入口，主要是解析命令行参数，然后决定要做哪些操作
 int main(int argc, char **argv) {
 	program_name = argv[0];
 
+    // 解析命令行参数
 	if(!parse_options(argc, argv)) {
 		return 1;
 	}
 
+    // 很多全局变量，因为tincd是一个单线程的程序，所以没啥大问题
 	if(show_version) {
 		printf("%s version %s\n", PACKAGE, VERSION);
 		printf("Copyright (C) 1998-2019 Ivo Timmermans, Guus Sliepen and others.\n"
@@ -663,6 +667,7 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
+    // 如果是显示usage
 	if(show_help) {
 		usage(false);
 		return 0;
@@ -729,6 +734,7 @@ int main(int argc, char **argv) {
 	}
 }
 
+// main太长了？分一个函数出来？
 int main2(int argc, char **argv) {
 	InitializeCriticalSection(&mutex);
 	EnterCriticalSection(&mutex);
@@ -763,7 +769,7 @@ int main2(int argc, char **argv) {
 	try_outgoing_connections();
 
 	/* Change process priority */
-
+    // 设置优先级
 	if(get_config_string(lookup_config(config_tree, "ProcessPriority"), &priority)) {
 		if(!strcasecmp(priority, "Normal")) {
 			if(setpriority(NORMAL_PRIORITY_CLASS) != 0) {
@@ -796,10 +802,11 @@ int main2(int argc, char **argv) {
 
 	/* Start main loop. It only exits when tinc is killed. */
 
+    // 这里是处理网络事件的循环
 	status = main_loop();
 
 	/* Shutdown properly. */
-
+    // 各种善后
 	ifdebug(CONNECTIONS)
 	devops.dump_stats();
 

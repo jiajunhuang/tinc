@@ -450,6 +450,7 @@ static void send_udppacket(node_t *n, vpn_packet_t *origpkt) {
 
 	/* Make sure we have a valid key */
 
+    // 如果没有key就转tcp发送？
 	if(!n->status.validkey) {
 		ifdebug(TRAFFIC) logger(LOG_INFO,
 		                        "No valid key known yet for %s (%s), forwarding via TCP",
@@ -608,6 +609,7 @@ static void send_udppacket(node_t *n, vpn_packet_t *origpkt) {
 		}
 	}
 
+    // UDP发射
 	if(sendto(listen_socket[sock].udp, (char *) &inpkt->seqno, inpkt->len, 0, sa, sl) < 0 && !sockwouldblock(sockerrno)) {
 		if(sockmsgsize(sockerrno)) {
 			if(n->maxmtu >= origlen) {
@@ -661,6 +663,7 @@ void send_packet(const node_t *n, vpn_packet_t *packet) {
 			terminate_connection(via->connection, true);
 		}
 	} else {
+        // 发udp，不过文档上说，如果udp不行，就会改tcp，我们看看是不是在这里面
 		send_udppacket(via, packet);
 	}
 }

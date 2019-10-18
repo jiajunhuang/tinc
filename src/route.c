@@ -606,12 +606,14 @@ static void fragment_ipv4_packet(node_t *dest, vpn_packet_t *packet, length_t et
 	}
 }
 
+// unicast就是单播，一对一传播
 static void route_ipv4_unicast(node_t *source, vpn_packet_t *packet) {
 	subnet_t *subnet;
 	node_t *via;
 	ipv4_t dest;
 
 	memcpy(&dest, &packet->data[30], sizeof(dest));
+    //把目标地址找出来
 	subnet = lookup_subnet_ipv4(&dest);
 
 	if(!subnet) {
@@ -631,6 +633,7 @@ static void route_ipv4_unicast(node_t *source, vpn_packet_t *packet) {
 		return;
 	}
 
+    // 无法送达
 	if(!subnet->owner->status.reachable) {
 		route_ipv4_unreachable(source, packet, ether_size, ICMP_DEST_UNREACH, ICMP_NET_UNREACH);
 		return;
@@ -677,6 +680,7 @@ static void route_ipv4_unicast(node_t *source, vpn_packet_t *packet) {
 
 	clamp_mss(source, via, packet);
 
+    // 发射！
 	send_packet(subnet->owner, packet);
 }
 

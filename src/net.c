@@ -351,11 +351,12 @@ static void check_network_activity(fd_set *readset, fd_set *writeset) {
 
 	/* check input from kernel */
 	if(device_fd >= 0 && FD_ISSET(device_fd, readset)) {
+        // 读一个包，然后决定如何路由
 		if(devops.read(&packet)) {
 			if(packet.len) {
 				errors = 0;
 				packet.priority = 0;
-				route(myself, &packet);
+				route(myself, &packet); // 路由
 			}
 		} else {
 			usleep(errors * 50000);
@@ -480,6 +481,7 @@ int main_loop(void) {
 		tv.tv_usec = 0;
 #endif
 
+        // 把需要读和写的放进来
 		maxfd = build_fdset(&readset, &writeset);
 
 #ifdef HAVE_MINGW
@@ -488,7 +490,7 @@ int main_loop(void) {
 #ifdef HAVE_PSELECT
 		r = pselect(maxfd + 1, &readset, &writeset, NULL, &tv, &omask);
 #else
-		r = select(maxfd + 1, &readset, &writeset, NULL, &tv);
+		r = select(maxfd + 1, &readset, &writeset, NULL, &tv); // 阻塞在此，可读或者可写的时候就会返回
 #endif
 		now = time(NULL);
 #ifdef HAVE_MINGW
@@ -504,6 +506,7 @@ int main_loop(void) {
 		}
 
 		if(r > 0) {
+            // 检查socket发生了啥
 			check_network_activity(&readset, &writeset);
 		}
 
